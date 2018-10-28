@@ -1,5 +1,5 @@
 # deep-learning-Notebook
-[contains deepdream, deep learning research papers] 
+[contains deepdream, deep learning research papers] </br>
 Artificial neural networks are among the earliest machine learning algorithms, and most are inspired by a particular simplification of the biological neuron. Interestingly neurons in the human visual system are sparsely connected, with connections mainly involving neurons associated with spatially neighboring areas of the retina. The best-performing learning algorithms on some vision tasks such as digit classification are convolutional networks, in which filters are both spatially sparse and shared across all the different filter locations. This motivated two variants explored here. 
 
 <h4>Neural network papernotes</h4> 
