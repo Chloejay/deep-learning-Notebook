@@ -1,5 +1,4 @@
 
-#to create the new file that can be work in the Neural Network 
 import numpy as np
 from functools import partial
 import PIL.Image
@@ -7,48 +6,52 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import urllib.request
 import os
-import zipfile 
+import zipfile  
 
-def main():
-    #Step 1 - download google's pre-trained neural network
-    url = 'https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip' #import the pre-train model from google 
+
+#deep dream is first built by Google Research on August 2015 and related to inception and deep dream lib 
+#neural style: a Torch variation of deep dreams, used to transfer artistic styles 
+ 
+
+def main(): 
+    #import the pre-train neural network model from google 
+    url = 'https://storage.googleapis.com/download.tensorflow.org/models/inception5h.zip' 
     data_dir = '../data/' 
     model_name = os.path.split(url)[-1] 
-    local_zip_file = os.path.join(data_dir, model_name) #use os.path.join  
+    local_zip_file = os.path.join(data_dir, model_name)  
     
-    if not os.path.exists(local_zip_file): #if not existed, then download 
+    if not os.path.exists(local_zip_file): 
         model_url = urllib.request.urlopen(url)
         with open(local_zip_file, 'wb') as output:
             output.write(model_url.read())
-        with zipfile.ZipFile(local_zip_file, 'r') as zip_ref: #extract the information to the data dir folder 
-            zip_ref.extractall(data_dir)
+        with zipfile.ZipFile(local_zip_file, 'r') as zip_ref: 
+            zip_ref.extractall(data_dir) 
   
-    img_noise = np.random.uniform(size=(224,224,3)) + 100.0 #add some noise to the image 
-    model_fn = 'tensorflow_inception_graph.pb'  
+    img_noise = np.random.uniform(size=(224,224,3)) + 40.0 #add some noise to the image  
+    model_fn = 'tensorflow_inception_graph.pb'   
     
-    graph = tf.Graph() #Step 2 - Creating Tensorflow session and loading the model 
-    sess = tf.InteractiveSession(graph=graph)
+    graph = tf.Graph() #create Tensorflow session & load the model  
+    sess = tf.InteractiveSession(graph=graph) 
     
     with tf.gfile.FastGFile(os.path.join(data_dir, model_fn), 'rb') as f:
         graph_def = tf.GraphDef()
         graph_def.ParseFromString(f.read())
-    t_input = tf.placeholder(np.float32, name='input') # define the input tensor
+    t_input = tf.placeholder(np.float32, name='input') 
     
     imagenet_mean = 117.0
     t_preprocessed = tf.expand_dims(t_input-imagenet_mean, 0)
     tf.import_graph_def(graph_def, {'input':t_preprocessed})
     
-    layers = [op.name for op in graph.get_operations() if op.type=='Conv2D' and 'import/' in op.name]
-    feature_nums = [int(graph.get_tensor_by_name(name+':0').get_shape()[-1]) for name in layers]
-    
-    print('Number of layers', len(layers))
-    print('Total number of feature channels:', sum(feature_nums)) 
+    layers = [op.name for op in graph.get_operations() if op.type=='Conv2D' and 'import/' in op.name] #list comprehsion func
+    feature_nums = [int(graph.get_tensor_by_name(name+':0').get_shape()[-1]) for name in layers] 
+    print('Num of layers', len(layers))
+    print('Total num of feature channels:', sum(feature_nums))  
     
     def strip_consts(graph_def, max_const_size=32):
-        strip_def = tf.GraphDef()
-    for n0 in graph_def.node:
+        strip_def = tf.GrahDef()
+    for k in graph_def.node:
         n = strip_def.node.add() 
-        n.MergeFrom(n0) 
+        n.MergeFrom(k) 
         if n.op == 'Const': 
             tensor = n.attr['value'].tensor
             size = len(tensor.tensor_content)
@@ -58,9 +61,9 @@ def main():
 
     def rename_nodes(graph_def, rename_func):
         res_def = tf.GraphDef()
-    for n0 in graph_def.node:
-        n = res_def.node.add() #pylint: disable=maybe-no-member
-        n.MergeFrom(n0)
+    for k in graph_def.node:
+        n = res_def.node.add() 
+        n.MergeFrom(k)
         n.name = rename_func(n.name)
         for i, s in enumerate(n.input):
             n.input[i] = rename_func(s) if s[0]!='^' else '^'+rename_func(s[1:])
@@ -78,23 +81,22 @@ def main():
         return graph.get_tensor_by_name("import/%s:0"%layer) 
     
     def render_naive(t_obj, img0=img_noise, iter_n=20, step=1.0):
-        t_score = tf.reduce_mean(t_obj) # defining the optimization objective
-        t_grad = tf.gradients(t_score, t_input)[0] # behold the power of automatic differentiation!
+        t_score = tf.reduce_mean(t_obj) #score function for optimization
+        t_grad = tf.gradients(t_score, t_input)[0] #grad descent 
         
         img = img0.copy()
         for _ in range(iter_n):
             g, _ = sess.run([t_grad, t_score], {t_input:img})
-            # normalizing the gradient, so the same step size should work 
-            g /= g.std()+1e-8   # for different layers and networks
+            g /= g.std()+1e-8  
             img += g*step
         showarray(visstd(img)) 
         
     def tffunc(*argtypes): 
         placeholders = list(map(tf.placeholder, argtypes))
         def wrap(f): 
-            out = f(*placeholders)
+            output = f(*placeholders)
             def wrapper(*args, **kw):
-                return out.eval(dict(zip(placeholders, args)), 
+                return output.eval(dict(zip(placeholders, args)), 
                 session=kw.get('session')) 
             return wrapper
         return wrap  
@@ -125,12 +127,10 @@ def main():
                          step=1.5, 
                          octave_n=4, 
                          octave_scale=1.4): 
-        t_score = tf.reduce_mean(t_obj) # defining the optimization objective
-        t_grad = tf.gradients(t_score, t_input)[0] # behold the power of automatic differentiation!
-    
-        # split the image into a number of octaves
+        t_score = tf.reduce_mean(t_obj) 
+        t_grad = tf.gradients(t_score, t_input)[0]  
         img = img0
-        octaves = []
+        octaves = [] 
         for _ in range(octave_n-1):
             hw = img.shape[:2]
             lo = resize(img, np.int32(np.float32(hw)/octave_scale))
@@ -157,4 +157,3 @@ def main():
       
 if __name__ == '__main__': 
     main() 
-
