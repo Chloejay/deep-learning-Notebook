@@ -3,7 +3,7 @@
 Artificial neural networks are among the earliest machine learning algorithms, and most are inspired by a particular simplification of the biological neuron. Interestingly neurons in the human visual system are sparsely connected, with connections mainly involving neurons associated with spatially neighboring areas of the retina. The best-performing learning algorithms on some vision tasks such as digit classification are convolutional networks, in which filters are both spatially sparse and shared across all the different filter locations. This motivated two variants explored here. 
 
 <h4>Neural network papernotes</h4> 
-This was inspired by Denny Britz when I checked some deep learning papers, so I believe it’s a good habit I should develop as well for documenting the realted papers I have read. 
+This was inspired by Denny Britz when I checked some deep learning papers, so I believe it’s a good habit I should develop as well for documenting the realted papers I have read or some papers I have already categoried in my reading list. Of course there are so many I probably need more time to digest and add here (to do list). 
 
 <ul>
   <li>
